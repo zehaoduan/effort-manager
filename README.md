@@ -73,7 +73,9 @@ To work in Xcode instead: `cmake -S . -B xcode -G Xcode`, then open `xcode/Effor
   tall, while no component is running; otherwise the running component's name
   and its percentage of target, such as `Leisure @ 104%`, flashing green and
   black once a second, about a twentieth of the screen height tall, translucent
-  and set a tenth of the screen height lower so it gets in the way less.
+  and set a tenth of the screen height lower so it gets in the way less. Hover
+  the pointer over the running label and it hides, leaving only a red outline
+  0.2 % of the screen height thick, so whatever is underneath can be read.
 - **Notification** — when a component reaches its target you get a macOS
   notification (allow it when asked at first launch; it can be changed later in
   System Settings > Notifications), a beep, a bouncing dock icon, and the row

@@ -35,6 +35,8 @@ constexpr CGFloat kStoppedOverlayTextHeightFraction = 0.20;  // "Timer Stopped" 
 constexpr CGFloat kRunningOverlayTextHeightFraction = 0.05;  // running component name, same ratio
 constexpr CGFloat kRunningOverlayTopOffsetFraction = 0.10;   // pushed down so it covers less of other apps
 constexpr CGFloat kRunningOverlayAlpha = 0.45;               // whole label, text and backdrop, is translucent
+constexpr NSTimeInterval kHoverPollInterval = 0.1;          // the overlays are click-through, so hovering is polled
+constexpr CGFloat kHoverOutlineHeightFraction = 0.002;      // outline thickness vs. screen height
 constexpr CGFloat kOverlayMargin = 12;
 constexpr NSTimeInterval kStoppedFlashInterval = 0.25;  // red/black, 2 Hz
 constexpr NSTimeInterval kRunningFlashInterval = 0.5;   // green/black, 1 Hz
@@ -155,13 +157,15 @@ NSAttributedString *accentedText(NSString *text, NSFont *font, NSColor *color) {
     // or the running component's name in green.
     NSMutableArray<NSWindow *> *_overlayWindows;
     NSMutableArray<NSTextField *> *_overlayLabels;
-    NSMutableArray<NSNumber *> *_overlayPaddings;  // per window, depends on its screen
+    NSMutableArray<NSNumber *> *_overlayPaddings;       // per window, depends on its screen
+    NSMutableArray<NSNumber *> *_overlayOutlineWidths;  // per window: 0.2 % of its screen height
     NSString *_overlayText;        // text currently shown
     CGFloat _overlayHeightFraction;  // mode the windows were built for
     NSTimer *_flashTimer;
     NSColor *_flashColorA;
     NSColor *_flashColorB;
     BOOL _flashPhase;
+    NSTimer *_hoverTimer;          // running label only: hide it under the pointer, show a flashing outline
 }
 
 #pragma mark - Application lifecycle
@@ -1039,8 +1043,10 @@ NSAttributedString *accentedText(NSString *text, NSFont *font, NSColor *color) {
         [self flashBetween:[NSColor colorWithSRGBRed:0.0 green:0.55 blue:0.1 alpha:1.0]
                        and:NSColor.blackColor
                   interval:kRunningFlashInterval];
+        [self startHoverTracking];
     } else {
         [self flashBetween:NSColor.systemRedColor and:NSColor.blackColor interval:kStoppedFlashInterval];
+        [self stopHoverTracking];
     }
     for (NSWindow *window in _overlayWindows) {
         if (!window.visible) [window orderFrontRegardless];
@@ -1049,7 +1055,45 @@ NSAttributedString *accentedText(NSString *text, NSFont *font, NSColor *color) {
 
 - (void)hideOverlay {
     [self stopFlashing];
+    [self stopHoverTracking];
     for (NSWindow *window in _overlayWindows) [window orderOut:nil];
+}
+
+#pragma mark Hover on the running label
+
+- (void)startHoverTracking {
+    if (_hoverTimer) return;
+    _hoverTimer = [NSTimer timerWithTimeInterval:kHoverPollInterval target:self
+                                        selector:@selector(hoverTick:) userInfo:nil repeats:YES];
+    [[NSRunLoop mainRunLoop] addTimer:_hoverTimer forMode:NSRunLoopCommonModes];
+}
+
+- (void)stopHoverTracking {
+    [_hoverTimer invalidate];
+    _hoverTimer = nil;
+    for (NSUInteger i = 0; i < _overlayWindows.count; ++i) [self setOverlayWindow:i hovered:NO];
+}
+
+- (void)hoverTick:(NSTimer *)timer {
+    const NSPoint mouse = [NSEvent mouseLocation];
+    for (NSUInteger i = 0; i < _overlayWindows.count; ++i) {
+        const BOOL inside = NSMouseInRect(mouse, _overlayWindows[i].frame, NO);
+        [self setOverlayWindow:i hovered:inside];
+    }
+}
+
+// Hovered: text and backdrop hidden, a steady thick red outline marks where the label is,
+// and the window is fully opaque so the outline is vivid. Not hovered: the normal label.
+- (void)setOverlayWindow:(NSUInteger)index hovered:(BOOL)hovered {
+    NSWindow *window = _overlayWindows[index];
+    NSTextField *label = _overlayLabels[index];
+    CALayer *layer = window.contentView.layer;
+    label.hidden = hovered;
+    layer.backgroundColor = hovered ? NSColor.clearColor.CGColor
+                                    : [NSColor colorWithWhite:1.0 alpha:kOverlayBackdropAlpha].CGColor;
+    layer.borderWidth = hovered ? _overlayOutlineWidths[index].doubleValue : 0.0;
+    layer.borderColor = hovered ? NSColor.systemRedColor.CGColor : NSColor.clearColor.CGColor;
+    window.alphaValue = hovered ? 1.0 : kRunningOverlayAlpha;
 }
 
 // Alternates the overlay text between two colours; a call with the same colours and
@@ -1085,6 +1129,7 @@ NSAttributedString *accentedText(NSString *text, NSFont *font, NSColor *color) {
     _overlayWindows = [NSMutableArray array];
     _overlayLabels = [NSMutableArray array];
     _overlayPaddings = [NSMutableArray array];
+    _overlayOutlineWidths = [NSMutableArray array];
     _overlayText = nil;
     _overlayHeightFraction = 0;
 }
@@ -1167,6 +1212,7 @@ NSAttributedString *accentedText(NSString *text, NSFont *font, NSColor *color) {
         [_overlayWindows addObject:window];
         [_overlayLabels addObject:label];
         [_overlayPaddings addObject:@(padding)];
+        [_overlayOutlineWidths addObject:@(screen.frame.size.height * kHoverOutlineHeightFraction)];
     }
 }
 

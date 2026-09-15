@@ -1,0 +1,18 @@
+# ninja log v7
+1	478	1789454877810518065	CMakeFiles/effort_core.dir/src/core/TimeFormat.cpp.o	11efb0719d96c4e7
+1	520	1789454877810309648	CMakeFiles/effort_core.dir/src/core/Json.cpp.o	e3f046b2178bd1c6
+0	531	1789454877810147480	CMakeFiles/effort_core.dir/src/core/EffortModel.cpp.o	bc9bf32186000947
+1	552	1789454877810418273	CMakeFiles/effort_core.dir/src/core/Store.cpp.o	82585575597656ce
+552	613	1789454878361857181	libeffort_core.a	14c14ca4d18f5a84
+1	686	1789454877810715149	CMakeFiles/core_tests.dir/tests/core_tests.cpp.o	e7c5adca64f107b0
+686	716	1789454878495555053	core_tests	b86ef925e34ce479
+1	998	1789454877810616190	CMakeFiles/EffortManager.dir/src/mac/main.mm.o	ac36368ca569d2b3
+999	1099	1789454878809044341	EffortManager.app/Contents/MacOS/EffortManager	1159a989aa63f670
+24	1054	1789455547878181558	CMakeFiles/EffortManager.dir/src/mac/main.mm.o	ac36368ca569d2b3
+1054	1208	1789455548907950638	EffortManager.app/Contents/MacOS/EffortManager	1159a989aa63f670
+8	820	1789455649495459910	CMakeFiles/EffortManager.dir/src/mac/main.mm.o	ac36368ca569d2b3
+820	917	1789455650308028791	EffortManager.app/Contents/MacOS/EffortManager	1159a989aa63f670
+7	822	1789455686446621309	CMakeFiles/EffortManager.dir/src/mac/main.mm.o	ac36368ca569d2b3
+822	920	1789455687261957958	EffortManager.app/Contents/MacOS/EffortManager	1159a989aa63f670
+7	811	1789455735757887581	CMakeFiles/EffortManager.dir/src/mac/main.mm.o	ac36368ca569d2b3
+811	905	1789455736562472622	EffortManager.app/Contents/MacOS/EffortManager	1159a989aa63f670
